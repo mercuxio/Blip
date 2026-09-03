@@ -6,7 +6,9 @@ of your active network interface, and how many have moved this session.
 No Dock icon, no window, no account, no telemetry. One line in the menu bar and
 a panel when you click it.
 
-Requires macOS 14 (Sonoma) or later. Apple silicon and Intel.
+Requires macOS 14 (Sonoma) or later. The prebuilt download is Apple silicon
+only; on an Intel Mac, build from source — it compiles natively for whatever
+machine you build on.
 
 ## Install
 
