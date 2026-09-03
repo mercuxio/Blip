@@ -1,0 +1,11 @@
+# SwiftPM build products, and the hand-assembled .app bundle the Makefile
+# places alongside them.
+.build/
+.swiftpm/
+
+# Xcode / SwiftPM local state
+*.xcuserstate
+xcuserdata/
+DerivedData/
+
+.DS_Store
