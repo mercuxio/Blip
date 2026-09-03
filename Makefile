@@ -9,12 +9,13 @@ export DEVELOPER_DIR := /Applications/Xcode-beta.app/Contents/Developer
 CONFIG   ?= release
 BUILD    := .build/$(CONFIG)
 APP      := .build/InOut.app
+ZIP      := .build/InOut.app.zip
 INSTALL  := /Applications/InOut.app
 
 ICON     := Resources/AppIcon.icns
 ICONSET  := .build/AppIcon.iconset
 
-.PHONY: all build test app run install uninstall icon clean
+.PHONY: all build test app zip run install uninstall icon clean
 
 all: app
 
@@ -46,6 +47,17 @@ app: build $(ICON)
 	# developer identity, at the cost of not being distributable.
 	codesign --force --sign - --timestamp=none "$(APP)"
 	@echo "Built $(APP)"
+
+# The release artifact.
+#
+# `ditto`, not `zip`: a bundle's code signature lives partly in extended
+# attributes, and `zip` drops those. The unzipped copy would then fail
+# signature validation and be killed on launch — on the downloader's machine
+# only, which is the worst place to find out.
+zip: app
+	rm -f "$(ZIP)"
+	ditto -c -k --sequesterRsrc --keepParent "$(APP)" "$(ZIP)"
+	@echo "Built $(ZIP)"
 
 run: app
 	@pkill -x InOut || true

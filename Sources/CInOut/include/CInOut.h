@@ -4,8 +4,6 @@
 #include <stdint.h>
 
 #define INOUT_IFNAME_MAX   16
-#define INOUT_PROCNAME_MAX 64
-#define INOUT_ADDR_MAX     46
 
 typedef struct {
     char     name[INOUT_IFNAME_MAX];
@@ -37,27 +35,5 @@ int inout_read_ifmib(InOutIfCounters *buf, int cap);
  * reporting a fraction of reality. Returns rows written, or -1.
  */
 int inout_read_iflist2(InOutIfCounters *buf, int cap);
-
-typedef struct {
-    int32_t  pid;
-    char     process[INOUT_PROCNAME_MAX];
-    char     local_addr[INOUT_ADDR_MAX];
-    char     remote_addr[INOUT_ADDR_MAX];
-    uint16_t local_port;
-    uint16_t remote_port;
-    uint8_t  family;   /* 4 or 6 */
-    uint8_t  proto;    /* IPPROTO_TCP (6) or IPPROTO_UDP (17) */
-    uint8_t  state;    /* TCPS_* for TCP, 0 for UDP */
-} InOutConnection;
-
-/*
- * Enumerates IPv4/IPv6 sockets via proc_listpids + proc_pidfdinfo.
- *
- * Without root this sees only the calling user's processes -- roughly 95% of
- * sockets on a normal desktop, but root daemons (mDNSResponder, nsurlsessiond)
- * are invisible. That is a permission boundary, not a bug; the UI says so.
- * Returns rows written, or -1 on failure.
- */
-int inout_read_connections(InOutConnection *buf, int cap);
 
 #endif /* CINOUT_H */
