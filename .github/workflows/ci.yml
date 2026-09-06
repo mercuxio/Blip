@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15
+    env:
+      # The Makefile defaults to /Applications/Xcode-beta.app, which does not
+      # exist on a runner. It reads this with `?=`, so setting it here wins.
+      # /Applications/Xcode.app is the symlink the runner image points at its
+      # default Xcode, so this does not pin a version.
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: make test
+
+      # Assembling the bundle catches Info.plist and code-signing breakage that
+      # the test suite cannot see, since neither exists during `swift test`.
+      - name: Package the app
+        run: make app

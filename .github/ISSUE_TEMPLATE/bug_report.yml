@@ -1,0 +1,60 @@
+name: Bug report
+description: Something Blip does that it should not
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Blip version
+      description: The last line of the gear menu, e.g. "Blip 1.0.0".
+      placeholder: Blip 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: 15.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: measure
+    attributes:
+      label: Measure setting
+      options:
+        - Primary interface
+        - All physical interfaces
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: approximate
+    attributes:
+      label: Does the panel show the orange "Approximate" badge?
+      description: >-
+        It appears next to the interface name when the kernel's accurate counter
+        failed its startup check. If the numbers look wrong, this is the first
+        thing to check.
+      options:
+        - label: Yes, the badge is showing
+        - label: I am on a VPN or have one configured
+
+  - type: textarea
+    id: netstat
+    attributes:
+      label: Output of `netstat -ib | head -20`
+      description: >-
+        Optional, and only useful for wrong-numbers reports. It lists your
+        interface names and their byte counts, which is what Blip reads. It
+        contains no addresses or traffic contents.
+      render: shell

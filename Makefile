@@ -4,7 +4,10 @@
 # pointing it at a full Xcode makes `swift build` use the default build system.
 # Without it, the Command Line Tools toolchain is picked up instead and the
 # build needs the deprecated `--build-system native` flag to find SwiftUI.
-export DEVELOPER_DIR := /Applications/Xcode-beta.app/Contents/Developer
+# `?=`, so CI and anyone whose Xcode lives elsewhere can point this at their
+# own toolchain from the environment; `:=` would override them.
+DEVELOPER_DIR ?= /Applications/Xcode-beta.app/Contents/Developer
+export DEVELOPER_DIR
 
 CONFIG   ?= release
 BUILD    := .build/$(CONFIG)

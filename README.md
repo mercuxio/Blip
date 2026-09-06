@@ -102,7 +102,7 @@ no update check.
 
 ```bash
 make build   # swift build -c release
-make test    # 25 tests, 5 suites
+make test    # 28 tests, 6 suites
 make app     # assemble .build/Blip.app
 make icon    # regenerate Resources/AppIcon.icns from Tools/GenerateIcon.swift
 ```
@@ -114,6 +114,11 @@ The layout is deliberate:
 - `Sources/BlipCore` — everything worth testing, as pure functions where
   possible: counter reading, rate derivation, interface selection, formatting.
 - `Sources/Blip` — a thin SwiftUI layer over that. `MenuBarExtra(.window)`.
+
+[CONTRIBUTING.md](CONTRIBUTING.md) has the parts that are easy to get wrong:
+why the build needs `DEVELOPER_DIR`, why the release is zipped with `ditto`
+rather than `zip`, and why the `iflist2` cross-check is not redundant.
+Released versions are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
