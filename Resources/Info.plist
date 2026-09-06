@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Blip</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.houlanyit.Blip</string>
+	<string>com.houlanyit.Blip</string>
 	<key>CFBundleExecutable</key>
 	<string>Blip</string>
 	<!-- Extensionless by convention; resolves to Contents/Resources/AppIcon.icns. -->
