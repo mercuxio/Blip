@@ -7,7 +7,11 @@ on:
 
 jobs:
   test:
-    runs-on: macos-15
+    # macos-15, not 26, fails: its Xcode ships a Swift older than 6.2, and
+    # NetworkMonitor's `isolated deinit` (SE-0371) is a 6.2 feature. The build
+    # error names the deinit's properties, not the toolchain, so it reads like
+    # an actor-isolation bug rather than a missing language feature.
+    runs-on: macos-26
     env:
       # The Makefile defaults to /Applications/Xcode-beta.app, which does not
       # exist on a runner. It reads this with `?=`, so setting it here wins.

@@ -22,6 +22,12 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make test
 
 Calling `swift test` directly works only if you export it yourself first.
 
+**Swift 6.2 or newer is required.** `NetworkMonitor` uses `isolated deinit`
+(SE-0371), which arrived in 6.2. On an older toolchain the compiler accepts the
+`isolated` keyword and then rejects the body, complaining that main-actor
+properties cannot be referenced from a nonisolated context — an error that names
+the properties and never mentions your Swift version.
+
 There are no package dependencies, and there should not be any. `swift-testing`
 comes from the toolchain, not from SPM.
 
