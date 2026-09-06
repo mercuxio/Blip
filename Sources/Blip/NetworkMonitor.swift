@@ -236,6 +236,11 @@ final class NetworkMonitor {
         publicAddress = .looking
         publicAddressTask = Task { [weak self] in
             guard let self else { return }
+            // `defer` rather than a trailing assignment: the cancellation check
+            // below returns early, and leaving the handle set there would wedge
+            // the feature permanently — the guard above would refuse every
+            // future lookup because a task it thinks is running never finished.
+            defer { publicAddressTask = nil }
             let session = lookupSession
 
             // Concurrently, not in sequence: on a v4-only network the v6 lookup
@@ -259,7 +264,6 @@ final class NetworkMonitor {
                 publicAddressRetryCountdown = 0
             }
             publicAddressCheckedAt = ProcessInfo.processInfo.systemUptime
-            publicAddressTask = nil
         }
     }
 
