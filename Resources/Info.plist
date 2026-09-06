@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>InOut</string>
+	<string>Blip</string>
 	<key>CFBundleDisplayName</key>
-	<string>InOut</string>
+	<string>Blip</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.local.InOut</string>
+	<string>dev.houlanyit.Blip</string>
 	<key>CFBundleExecutable</key>
-	<string>InOut</string>
+	<string>Blip</string>
 	<!-- Extensionless by convention; resolves to Contents/Resources/AppIcon.icns. -->
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>

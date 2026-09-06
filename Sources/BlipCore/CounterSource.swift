@@ -1,4 +1,4 @@
-import CInOut
+import CBlip
 import Darwin
 
 /// A single interface's cumulative byte counters, as reported by the kernel.
@@ -59,7 +59,7 @@ public struct IfMibCounterSource: CounterSource {
     public init() {}
     public var kind: CounterSourceKind { .ifmib }
     public func read() -> [InterfaceCounters] {
-        readRows { inout_read_ifmib($0, $1) }
+        readRows { blip_read_ifmib($0, $1) }
     }
 }
 
@@ -67,15 +67,15 @@ public struct IfList2CounterSource: CounterSource {
     public init() {}
     public var kind: CounterSourceKind { .iflist2 }
     public func read() -> [InterfaceCounters] {
-        readRows { inout_read_iflist2($0, $1) }
+        readRows { blip_read_iflist2($0, $1) }
     }
 }
 
 private func readRows(
-    _ call: (UnsafeMutablePointer<InOutIfCounters>, Int32) -> Int32
+    _ call: (UnsafeMutablePointer<BlipIfCounters>, Int32) -> Int32
 ) -> [InterfaceCounters] {
     let capacity = 256
-    var raw = [InOutIfCounters](repeating: InOutIfCounters(), count: capacity)
+    var raw = [BlipIfCounters](repeating: BlipIfCounters(), count: capacity)
     let count = raw.withUnsafeMutableBufferPointer { buffer in
         call(buffer.baseAddress!, Int32(capacity))
     }

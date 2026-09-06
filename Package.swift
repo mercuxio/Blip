@@ -2,19 +2,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "InOut",
+    name: "Blip",
     platforms: [.macOS(.v14)],
     targets: [
         // C shim: sysctl + libproc live here because their structs (if_data64,
         // socket_fdinfo's nested unions) do not import cleanly into Swift.
-        .target(name: "CInOut"),
+        .target(name: "CBlip"),
 
         // All logic worth testing. Pure functions where possible.
-        .target(name: "InOutCore", dependencies: ["CInOut"]),
+        .target(name: "BlipCore", dependencies: ["CBlip"]),
 
         // Thin SwiftUI shim.
-        .executableTarget(name: "InOut", dependencies: ["InOutCore"]),
+        .executableTarget(name: "Blip", dependencies: ["BlipCore"]),
 
-        .testTarget(name: "InOutCoreTests", dependencies: ["InOutCore"]),
+        .testTarget(name: "BlipCoreTests", dependencies: ["BlipCore"]),
     ]
 )

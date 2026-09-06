@@ -1,4 +1,4 @@
-#include "include/CInOut.h"
+#include "include/CBlip.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@
 #include <net/if_mib.h>
 #include <net/route.h>
 
-int inout_read_ifmib(InOutIfCounters *buf, int cap)
+int blip_read_ifmib(BlipIfCounters *buf, int cap)
 {
     if (!buf || cap <= 0) {
         return -1;
@@ -48,10 +48,10 @@ int inout_read_ifmib(InOutIfCounters *buf, int cap)
             continue;
         }
 
-        InOutIfCounters *out = &buf[written++];
+        BlipIfCounters *out = &buf[written++];
         memset(out, 0, sizeof(*out));
         memcpy(out->name, data.ifmd_name,
-               strnlen(data.ifmd_name, INOUT_IFNAME_MAX - 1));
+               strnlen(data.ifmd_name, BLIP_IFNAME_MAX - 1));
         out->ibytes = data.ifmd_data.ifi_ibytes;
         out->obytes = data.ifmd_data.ifi_obytes;
         out->flags  = data.ifmd_flags;
@@ -61,7 +61,7 @@ int inout_read_ifmib(InOutIfCounters *buf, int cap)
     return written;
 }
 
-int inout_read_iflist2(InOutIfCounters *buf, int cap)
+int blip_read_iflist2(BlipIfCounters *buf, int cap)
 {
     if (!buf || cap <= 0) {
         return -1;
@@ -114,11 +114,11 @@ int inout_read_iflist2(InOutIfCounters *buf, int cap)
         struct if_msghdr2 *hdr2 = (struct if_msghdr2 *)hdr;
         struct sockaddr_dl *sdl = (struct sockaddr_dl *)(hdr2 + 1);
 
-        InOutIfCounters *out = &buf[written++];
+        BlipIfCounters *out = &buf[written++];
         memset(out, 0, sizeof(*out));
         int nlen = sdl->sdl_nlen;
-        if (nlen > INOUT_IFNAME_MAX - 1) {
-            nlen = INOUT_IFNAME_MAX - 1;
+        if (nlen > BLIP_IFNAME_MAX - 1) {
+            nlen = BLIP_IFNAME_MAX - 1;
         }
         memcpy(out->name, sdl->sdl_data, nlen);
         out->ibytes = hdr2->ifm_data.ifi_ibytes;

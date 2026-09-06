@@ -1,8 +1,8 @@
-import InOutCore
+import BlipCore
 import SwiftUI
 
 @main
-struct InOutApp: App {
+struct BlipApp: App {
     @State private var monitor = NetworkMonitor()
     @AppStorage("displayStyle") private var styleRaw = DisplayStyle.rates.rawValue
 

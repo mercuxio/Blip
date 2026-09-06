@@ -40,7 +40,7 @@ private final class DynamicStoreBox: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         if store == nil {
-            store = SCDynamicStoreCreate(nil, "InOut" as CFString, nil, nil)
+            store = SCDynamicStoreCreate(nil, "Blip" as CFString, nil, nil)
         }
         guard let store else { return nil }
         return body(store)

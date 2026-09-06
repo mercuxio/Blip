@@ -1,4 +1,4 @@
-# InOut
+# Blip
 
 A macOS menu bar network monitor. It shows how fast bytes are moving in and out
 of your active network interface, and how many have moved this session.
@@ -12,17 +12,17 @@ machine you build on.
 
 ## Install
 
-**Download the release.** Grab `InOut.app.zip` from
-[Releases](https://github.com/mercuxio/InOut/releases), unzip it, and drag
-`InOut.app` to `/Applications`.
+**Download the release.** Grab `Blip.app.zip` from
+[Releases](https://github.com/mercuxio/Blip/releases), unzip it, and drag
+`Blip.app` to `/Applications`.
 
 The app is ad-hoc signed, not notarized — I don't pay for an Apple Developer
 account. macOS quarantines anything downloaded from the internet that isn't
-notarized, so the first launch will be refused with "InOut is damaged and can't
+notarized, so the first launch will be refused with "Blip is damaged and can't
 be opened" or "cannot be verified". Clear the quarantine flag once:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/InOut.app
+xattr -dr com.apple.quarantine /Applications/Blip.app
 ```
 
 Then open it normally. If you'd rather not run that on a stranger's binary —
@@ -32,7 +32,7 @@ reasonable — build it yourself; it takes about ten seconds.
 Line Tools — SwiftUI's module map isn't in the CLT toolchain).
 
 ```bash
-git clone https://github.com/mercuxio/InOut.git && cd InOut && make install
+git clone https://github.com/mercuxio/Blip.git && cd Blip && make install
 ```
 
 That builds a release binary, assembles the `.app` bundle, ad-hoc signs it, and
@@ -75,7 +75,7 @@ Counters come from `sysctl net.link.generic.ifdata.<row>.general`
 
 The more commonly used `NET_RT_IFLIST2` path is *not* the primary source: on
 current macOS it returns values truncated to 32 bits and floored to a 1 KiB
-multiple, despite declaring a 64-bit field. InOut reads it once at launch only
+multiple, despite declaring a 64-bit field. Blip reads it once at launch only
 to cross-check that `ifmib` hasn't started being sanitized the same way. If it
 has, the panel says "Approximate" rather than quietly reporting a fraction of
 reality.
@@ -99,17 +99,17 @@ no update check.
 ```bash
 make build   # swift build -c release
 make test    # 25 tests, 5 suites
-make app     # assemble .build/InOut.app
+make app     # assemble .build/Blip.app
 make icon    # regenerate Resources/AppIcon.icns from Tools/GenerateIcon.swift
 ```
 
 The layout is deliberate:
 
-- `Sources/CInOut` — C shim for the sysctl calls. The structs involved
+- `Sources/CBlip` — C shim for the sysctl calls. The structs involved
   (`if_data64` and friends) don't import cleanly into Swift.
-- `Sources/InOutCore` — everything worth testing, as pure functions where
+- `Sources/BlipCore` — everything worth testing, as pure functions where
   possible: counter reading, rate derivation, interface selection, formatting.
-- `Sources/InOut` — a thin SwiftUI layer over that. `MenuBarExtra(.window)`.
+- `Sources/Blip` — a thin SwiftUI layer over that. `MenuBarExtra(.window)`.
 
 ## License
 

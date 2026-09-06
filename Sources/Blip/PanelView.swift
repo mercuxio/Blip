@@ -1,4 +1,4 @@
-import InOutCore
+import BlipCore
 import SwiftUI
 
 struct PanelView: View {
@@ -241,7 +241,7 @@ private struct FooterBar: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .help("Quit InOut")
+            .help("Quit Blip")
         }
         // 10 horizontal and 5 vertical, plus each control's own 4pt of slop,
         // reproduces the 14/9 insets the text buttons used to need.

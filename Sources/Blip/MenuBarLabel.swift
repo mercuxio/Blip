@@ -1,4 +1,4 @@
-import InOutCore
+import BlipCore
 import SwiftUI
 
 struct MenuBarLabel: View {

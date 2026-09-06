@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import InOutCore
+@testable import BlipCore
 
 private let up = UInt32(0x1)          // IFF_UP
 private let loopback = UInt32(0x8)    // IFF_LOOPBACK

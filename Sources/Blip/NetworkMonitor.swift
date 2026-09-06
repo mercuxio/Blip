@@ -1,6 +1,6 @@
 import AppKit
 import Foundation
-import InOutCore
+import BlipCore
 import Observation
 
 /// What we currently know about the public address.

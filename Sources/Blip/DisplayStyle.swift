@@ -1,5 +1,5 @@
 import AppKit
-import InOutCore
+import BlipCore
 import SwiftUI
 
 /// How the menu bar item renders. Both options show live throughput — a

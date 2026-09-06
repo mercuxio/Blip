@@ -8,9 +8,9 @@ export DEVELOPER_DIR := /Applications/Xcode-beta.app/Contents/Developer
 
 CONFIG   ?= release
 BUILD    := .build/$(CONFIG)
-APP      := .build/InOut.app
-ZIP      := .build/InOut.app.zip
-INSTALL  := /Applications/InOut.app
+APP      := .build/Blip.app
+ZIP      := .build/Blip.app.zip
+INSTALL  := /Applications/Blip.app
 
 ICON     := Resources/AppIcon.icns
 ICONSET  := .build/AppIcon.iconset
@@ -39,7 +39,7 @@ $(ICON):
 app: build $(ICON)
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
-	cp "$(BUILD)/InOut" "$(APP)/Contents/MacOS/InOut"
+	cp "$(BUILD)/Blip" "$(APP)/Contents/MacOS/Blip"
 	cp Resources/Info.plist "$(APP)/Contents/Info.plist"
 	cp "$(ICON)" "$(APP)/Contents/Resources/AppIcon.icns"
 	# Ad-hoc signature. Unsigned SwiftUI apps are killed on launch by the
@@ -60,7 +60,7 @@ zip: app
 	@echo "Built $(ZIP)"
 
 run: app
-	@pkill -x InOut || true
+	@pkill -x Blip || true
 	open "$(APP)"
 
 install: app
@@ -69,7 +69,7 @@ install: app
 	@echo "Installed $(INSTALL)"
 
 uninstall:
-	@pkill -x InOut || true
+	@pkill -x Blip || true
 	rm -rf "$(INSTALL)"
 
 clean:

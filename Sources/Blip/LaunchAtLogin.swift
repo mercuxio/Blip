@@ -39,7 +39,7 @@ enum LaunchAtLogin {
             }
             return true
         } catch {
-            NSLog("InOut: login item \(enabled ? "register" : "unregister") failed: \(error)")
+            NSLog("Blip: login item \(enabled ? "register" : "unregister") failed: \(error)")
             return false
         }
     }

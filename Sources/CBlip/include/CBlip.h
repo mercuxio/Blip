@@ -1,17 +1,17 @@
-#ifndef CINOUT_H
-#define CINOUT_H
+#ifndef CBLIP_H
+#define CBLIP_H
 
 #include <stdint.h>
 
-#define INOUT_IFNAME_MAX   16
+#define BLIP_IFNAME_MAX   16
 
 typedef struct {
-    char     name[INOUT_IFNAME_MAX];
+    char     name[BLIP_IFNAME_MAX];
     uint64_t ibytes;
     uint64_t obytes;
     uint32_t flags;   /* IFF_* */
     uint32_t type;    /* IFT_* */
-} InOutIfCounters;
+} BlipIfCounters;
 
 /*
  * Primary counter source.
@@ -21,7 +21,7 @@ typedef struct {
  * Returns true, untruncated 64-bit byte counters. Verified against
  * `netstat -ib` to the byte. Returns rows written, or -1 on failure.
  */
-int inout_read_ifmib(InOutIfCounters *buf, int cap);
+int blip_read_ifmib(BlipIfCounters *buf, int cap);
 
 /*
  * Fallback / cross-check counter source.
@@ -34,6 +34,6 @@ int inout_read_ifmib(InOutIfCounters *buf, int cap);
  * being sanitized the same way, and degrade deliberately instead of silently
  * reporting a fraction of reality. Returns rows written, or -1.
  */
-int inout_read_iflist2(InOutIfCounters *buf, int cap);
+int blip_read_iflist2(BlipIfCounters *buf, int cap);
 
-#endif /* CINOUT_H */
+#endif /* CBLIP_H */
