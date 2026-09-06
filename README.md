@@ -90,10 +90,17 @@ timer, so it never spins up an idle core.
 ## Privacy
 
 Everything except one thing is local. That thing: the **public IP** row queries
-`api.ipify.org` (or `api6.ipify.org` for IPv6). It runs when you open the panel
-and when you press refresh — never in the background. Any service that tells
-you your public IP necessarily sees your public IP; if you'd rather it didn't,
-just don't open that row.
+`api.ipify.org` (or `api6.ipify.org` for IPv6). Any service that tells you your
+public IP necessarily sees your public IP.
+
+Nothing asks until you do. Blip makes no request at launch, and none at all if
+you never open the panel — opening it is what establishes the interest. Once
+you have, the answer is kept alive: it is looked up again whenever the primary
+interface changes, because waking, switching networks or bringing up a VPN is
+exactly when the old answer stopped being true, and a failed lookup retries on
+a backoff that starts at 15 seconds, doubles, and settles at one attempt every
+15 minutes until it succeeds. Some of that happens with the panel closed. The
+refresh button forces a fresh request at any time.
 
 Nothing else leaves the machine. There is no analytics, no crash reporting, and
 no update check.

@@ -75,8 +75,19 @@ is arm64-only — check with `lipo -archs` before claiming otherwise.
 
 ## The network boundary
 
-`https://api.ipify.org` is the only thing this app ever contacts, and only when
-the panel is open or the refresh button is pressed. Nothing is sent with the
-request and nothing is logged. Any change that adds an endpoint, or that makes
-the existing one fire on a timer, needs to be argued for in the pull request
-rather than slipped in.
+`https://api.ipify.org` (and `api6.ipify.org` for IPv6) is the only thing this
+app ever contacts. Nothing is sent with the request and nothing is logged.
+
+The gate is that the panel must have been opened at least once. Before that
+Blip issues no request at all — not at launch, not on a timer, not on a network
+change. After it, the lookup is allowed to run unattended: on a change of
+primary interface, and on a failure backoff starting at 15 seconds, doubling to
+a 15-minute ceiling. Both are deliberate. Waking races the interface coming
+back up, so the first attempt after a wake routinely fails on a network that is
+healthy two seconds later; and `PanelView`'s `onAppear` fires once for the life
+of the `MenuBarExtra` content view rather than on every open, so there is no
+"next open" to defer the re-ask to.
+
+Any change that adds an endpoint, that fetches before the first panel open, or
+that tightens the backoff, needs to be argued for in the pull request rather
+than slipped in.
