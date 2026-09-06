@@ -207,6 +207,13 @@ private struct FooterBar: View {
                         launchAtLogin = LaunchAtLogin.isEnabled
                     }
                 ))
+
+                Divider()
+                // A bare Text in a macOS menu renders as a disabled row, which
+                // is what this wants to be: visible, greyed, unclickable. Last
+                // rather than first because it is a footnote, not a heading —
+                // the controls are what the menu is opened for.
+                Text(AppInfo.current)
             } label: {
                 // Matches the padded box LucideGlyph builds, so all four footer
                 // controls are the same size and sit on the same rhythm.

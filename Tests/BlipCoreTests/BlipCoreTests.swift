@@ -297,3 +297,28 @@ struct ByteFormatTests {
         #expect(ByteFormat.total(1_200_000) == "1.2 MB")
     }
 }
+
+// MARK: - App info
+
+@Suite("App info")
+struct AppInfoTests {
+    @Test("Name and marketing version are joined for display")
+    func nameAndVersion() {
+        #expect(AppInfo.versionLabel(name: "Blip", shortVersion: "1.0.0") == "Blip 1.0.0")
+    }
+
+    @Test("Outside a bundle the name survives on its own")
+    func missingVersionDegradesToName() {
+        // `swift run` and `swift test` both have no Info.plist, so this is the
+        // shape the function really sees during development, not a hypothetical.
+        #expect(AppInfo.versionLabel(name: nil, shortVersion: nil) == "Blip")
+        #expect(AppInfo.versionLabel(name: "Blip", shortVersion: nil) == "Blip")
+    }
+
+    @Test("Empty strings are treated as absent rather than rendered")
+    func emptyFieldsAreNotRendered() {
+        // A blank key must not leave a leading space or a naked version.
+        #expect(AppInfo.versionLabel(name: "Blip", shortVersion: "") == "Blip")
+        #expect(AppInfo.versionLabel(name: "", shortVersion: "1.0.0") == "Blip 1.0.0")
+    }
+}

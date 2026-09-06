@@ -65,7 +65,11 @@ The gear menu also holds:
 - **Start at login** — registered through `SMAppService`, so it survives moving
   the app around; the toggle reflects what the system actually did, not what
   was asked.
-- **Reset session totals.**
+- The app name and version, at the bottom, for when you need to say which
+  build you are on.
+
+Beside the gear sit three buttons: reset session totals, buy me a coffee, and
+quit.
 
 ## How it measures
 
