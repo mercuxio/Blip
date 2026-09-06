@@ -4,6 +4,36 @@ All notable changes to Blip are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The public IP no longer stalls on "Looking up…" after the machine wakes.
+  Waking makes the primary interface go away and come back, which cleared the
+  address on the assumption that the next panel open would fetch it again — but
+  the panel's `onAppear` fires once for the life of the menu bar view, not on
+  every open, so nothing ever did. Only the refresh button recovered it.
+- A failed lookup is now retried on a backoff (15 seconds, doubling to a
+  15-minute ceiling) rather than staying failed until asked again. Waking races
+  the interface coming back up, so the first attempt after a wake often fails on
+  a network that is fine moments later.
+- The panel no longer keeps the height of its tallest-ever contents. Losing a
+  row left the window at its previous size with the content centred in it, which
+  read as unexplained padding above and below.
+- A cancelled lookup left its task handle set, which would have refused every
+  later lookup for the life of the process. Only reachable at teardown, so it
+  was never observable.
+
+### Changed
+
+- The public IP lookup may now run with the panel closed: on a change of primary
+  interface, and on the retry backoff above. It still never runs before the
+  panel has been opened at least once, so a Blip that is never opened contacts
+  nothing. See Privacy in the README.
+- `Package.swift` declares Swift 6.2, which is what the code has required since
+  it started using `isolated deinit`. It previously declared 6.0 and failed to
+  compile on it.
+
 ## [1.0.0] — 2026-09-03
 
 First public release.
