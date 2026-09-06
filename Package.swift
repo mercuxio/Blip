@@ -1,12 +1,12 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
     name: "Blip",
     platforms: [.macOS(.v14)],
     targets: [
-        // C shim: sysctl + libproc live here because their structs (if_data64,
-        // socket_fdinfo's nested unions) do not import cleanly into Swift.
+        // C shim: the sysctl counter reads live here because `if_data64` does
+        // not import cleanly into Swift.
         .target(name: "CBlip"),
 
         // All logic worth testing. Pure functions where possible.
