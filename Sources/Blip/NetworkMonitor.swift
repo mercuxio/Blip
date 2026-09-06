@@ -62,6 +62,26 @@ final class NetworkMonitor {
     private var publicAddressTask: Task<Void, Never>?
     private var publicAddressCheckedAt: TimeInterval?
 
+    /// True once something has actually asked for the public address.
+    ///
+    /// The lookup is deliberately on demand — it is the one number here that
+    /// costs somebody else a request — so nothing may fetch it before the panel
+    /// has been opened at least once. Past that point the interest is
+    /// established, and keeping the answer alive is no longer speculative.
+    private var publicAddressRequested = false
+
+    /// Ticks until a failed lookup is retried, and the delay that seeds it.
+    ///
+    /// Waking races the interface coming back up, so the first attempt after a
+    /// wake routinely fails on a network that is healthy two seconds later.
+    /// Without a retry that failure is permanent until somebody presses the
+    /// refresh button. The doubling is what keeps the other side of it from
+    /// being a merely offline machine asking four times a minute, forever.
+    private var publicAddressRetryCountdown = 0
+    private var publicAddressRetryDelay = 0
+    private static let publicAddressFirstRetryTicks = 15
+    private static let publicAddressMaximumRetryTicks = 900
+
     /// Ephemeral, short-timeout, cache-defeating. Ephemeral so the lookup
     /// leaves no cookies or on-disk cache behind; cache-defeating so the
     /// refresh button actually re-asks rather than replaying a stored 200.
@@ -143,6 +163,13 @@ final class NetworkMonitor {
         // rather than leaving us watching a NIC that stopped carrying traffic.
         refreshInterface()
 
+        if publicAddressRetryCountdown > 0 {
+            publicAddressRetryCountdown -= 1
+            if publicAddressRetryCountdown == 0 {
+                refreshPublicAddress(force: true)
+            }
+        }
+
         // Deliberately unguarded, unlike `reading` above: this is a time series,
         // so a repeated value still has to advance it or a burst would sit on
         // screen forever instead of ageing off over the window. Only the
@@ -176,7 +203,17 @@ final class NetworkMonitor {
         // the next panel open re-ask.
         if changed {
             publicAddressCheckedAt = nil
-            publicAddress = .unknown
+            if publicAddressRequested {
+                // Re-ask rather than blanking. `PanelView`'s `onAppear` fires
+                // once for the life of the MenuBarExtra content view, not on
+                // every open, so a `.unknown` parked here is never resolved by
+                // anything: the panel sits on "Looking up…" until the refresh
+                // button is pressed. Waking is exactly this case, because the
+                // interface goes away and comes back.
+                refreshPublicAddress(force: true)
+            } else {
+                publicAddress = .unknown
+            }
         }
     }
 
@@ -188,6 +225,7 @@ final class NetworkMonitor {
     /// one number here that costs somebody else a network request, so it is
     /// fetched when someone is actually looking at it.
     func refreshPublicAddress(force: Bool = false) {
+        publicAddressRequested = true
         guard publicAddressTask == nil else { return }
 
         if !force, case .resolved = publicAddress, let checked = publicAddressCheckedAt,
@@ -208,7 +246,18 @@ final class NetworkMonitor {
             let found = await [four, six].compactMap { $0 }
 
             guard !Task.isCancelled else { return }
-            publicAddress = found.isEmpty ? .unavailable : .resolved(found)
+            if found.isEmpty {
+                publicAddress = .unavailable
+                publicAddressRetryDelay = min(
+                    max(publicAddressRetryDelay * 2, Self.publicAddressFirstRetryTicks),
+                    Self.publicAddressMaximumRetryTicks
+                )
+                publicAddressRetryCountdown = publicAddressRetryDelay
+            } else {
+                publicAddress = .resolved(found)
+                publicAddressRetryDelay = 0
+                publicAddressRetryCountdown = 0
+            }
             publicAddressCheckedAt = ProcessInfo.processInfo.systemUptime
             publicAddressTask = nil
         }
