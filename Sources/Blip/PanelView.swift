@@ -4,7 +4,6 @@ import SwiftUI
 struct PanelView: View {
     let monitor: NetworkMonitor
     @Binding var style: DisplayStyle
-    @State private var contentHeight: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,52 +23,12 @@ struct PanelView: View {
             FooterBar(monitor: monitor, style: $style)
         }
         .frame(width: 340)
-        // Ideal height rather than whatever the panel proposes. This is what
-        // makes the measurement below independent of the window being
-        // measured in, so feeding it back into that window cannot oscillate.
+        // Ideal height rather than whatever the host proposes. `NSPopover`
+        // sizes itself from the hosting controller's `preferredContentSize`,
+        // which is this value, so the panel tracks its content in both
+        // directions without anyone resizing a window by hand.
         .fixedSize(horizontal: false, vertical: true)
-        .background {
-            GeometryReader { proxy in
-                Color.clear.onChange(of: proxy.size.height, initial: true) { _, height in
-                    contentHeight = height
-                }
-            }
-        }
-        .background(PanelHeight(height: contentHeight))
         .onAppear { monitor.refreshPublicAddress() }
-    }
-}
-
-/// Keeps the hosting panel exactly as tall as its content.
-///
-/// `MenuBarExtra(.window)` grows its panel to fit but never shrinks it, so any
-/// section that loses a row — the public address falling back to a one-line
-/// status, a lease handing out fewer addresses — leaves the panel at its
-/// tallest-ever size with the content centred in it, which reads as
-/// unexplained padding above *and* below. There is no SwiftUI lever for this:
-/// `.fixedSize` corrects the content's own height and the window still does
-/// not follow, so the window has to be set directly.
-private struct PanelHeight: NSViewRepresentable {
-    let height: CGFloat
-
-    func makeNSView(context: Context) -> NSView { NSView(frame: .zero) }
-
-    func updateNSView(_ view: NSView, context: Context) {
-        guard height > 0 else { return }
-        // Async because this runs inside a SwiftUI update, and resizing the
-        // window synchronously re-enters layout.
-        DispatchQueue.main.async {
-            guard let window = view.window,
-                  abs(window.frame.height - height) > 0.5
-            else { return }
-            var frame = window.frame
-            // The panel hangs from the menu bar, so hold the top edge still and
-            // let the bottom move; growing from the bottom-left origin instead
-            // would walk it up over the menu bar.
-            frame.origin.y += frame.height - height
-            frame.size.height = height
-            window.setFrame(frame, display: true)
-        }
     }
 }
 

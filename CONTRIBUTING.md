@@ -84,9 +84,9 @@ change. After it, the lookup is allowed to run unattended: on a change of
 primary interface, and on a failure backoff starting at 15 seconds, doubling to
 a 15-minute ceiling. Both are deliberate. Waking races the interface coming
 back up, so the first attempt after a wake routinely fails on a network that is
-healthy two seconds later; and `PanelView`'s `onAppear` fires once for the life
-of the `MenuBarExtra` content view rather than on every open, so there is no
-"next open" to defer the re-ask to.
+healthy two seconds later; and `PanelView`'s `onAppear` is not guaranteed to
+fire on every panel open — the hosting controller outlives any one open — so
+there is no reliable "next open" to defer the re-ask to.
 
 Any change that adds an endpoint, that fetches before the first panel open, or
 that tightens the backoff, needs to be argued for in the pull request rather

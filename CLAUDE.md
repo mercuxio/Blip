@@ -61,15 +61,59 @@ name prefix. That list is the double-counting fix, not cosmetic filtering: VPN
 traffic crosses both the tunnel and the NIC underneath, so summing every
 non-loopback interface reports it twice.
 
-### MenuBarExtra(.window) has two traps, both hit already
+### The menu bar item is hand-built, and that is a measured decision
 
-- **`.onAppear` on the content view fires once for the life of that view**, not
-  on each panel open. Anything scheduled "for the next open" never runs.
-- **The hosting `NSPanel` grows to fit but never shrinks.** A section losing a
-  row leaves the window at its tallest-ever size with content centred in it.
-  `PanelView` measures its *ideal* height (`.fixedSize`, so the measurement is
-  independent of the window being measured in and cannot oscillate) and sets the
-  window frame directly through `NSViewRepresentable`.
+`MenuBarExtra` is the idiomatic way to do this and Blip used it until it was
+profiled. It hosts its label in an `NSHostingView`, so every change to the
+readout costs an Auto Layout solve (`systemLayoutSizeFittingSize:`) and a width
+re-negotiation (`-[NSStatusItem _adjustLength]`) before anything is drawn — to
+re-derive a width that provably cannot change, since both readout styles render
+to a constant-width image. A three-way probe updating a status item at 1 Hz:
+
+    MenuBarExtra (SwiftUI label)      1.47% CPU
+    NSStatusItem, variable length     1.24% CPU
+    NSStatusItem, fixed length        0.96% CPU
+
+In Blip itself the win is real but smaller than that suggests: both builds run
+side by side on the same traffic came out at **1.83% → 1.55%, 15%**. Quote that
+number, not the probe's 35%.
+
+So `StatusItemController` owns an `NSStatusItem` created at a **fixed** length
+and assigns `button.image` directly. The panel is still SwiftUI, hosted in an
+`NSPopover`. Do not "modernise" this back to `MenuBarExtra`.
+
+What remains is not reachable from here. AppKit keeps mirror copies of a status
+item ("replicants") and re-captures each through `CALayer renderInContext:` on
+every content change — a full offscreen bitmap re-render, not a blit. A control
+build identical to Blip but for a frozen status item image measures **0.07%**,
+so essentially everything Blip costs is this redraw, and none of it is Blip's
+own work. That cost
+is charged **per content change, not per poll**, which is why `StackedRates` and
+`Sparkline` cache on their rendered output and why `NetworkMonitor.tick` assigns
+`reading` only when it differs. Do not remove those guards.
+
+### Poll rate and redraw rate are deliberately different
+
+`NetworkMonitor` polls at 1 Hz because session totals have to be exact.
+`StatusItemController.redrawInterval` repaints at half that, because the repaint
+is the only part AppKit charges for and the cost is per repaint. The saving is
+linear in that interval and is paid in latency — the readout may lag by up to
+one interval — never in accuracy. Raising it further is the one remaining lever
+if this ever needs to get cheaper again.
+
+The throttle *defers*, it does not drop. Dropping an early update would mean the
+last tick before a link goes quiet never reaches the menu bar, leaving a stale
+rate on screen forever. A preference change bypasses the throttle entirely, so
+switching display style still looks instant.
+
+Note the cache hit rate is low by nature — measured against 150 s of real
+traffic, the rendered strings change on 39 ticks out of 40. Rounding the
+displayed rate to coarser buckets to recover hits is the obvious next idea and
+does not work: rates swing over an order of magnitude second to second, and the
+two rows vary independently, so the readout changes unless *both* hold still.
+Even a ±100% deadband — letting the number be wrong by 2× — still changes on 80%
+of ticks. The guards earn their keep on a genuinely silent link, not on a merely
+quiet one.
 
 ### The network boundary
 

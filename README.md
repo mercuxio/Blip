@@ -120,7 +120,8 @@ The layout is deliberate:
   (`if_data64` and friends) don't import cleanly into Swift.
 - `Sources/BlipCore` — everything worth testing, as pure functions where
   possible: counter reading, rate derivation, interface selection, formatting.
-- `Sources/Blip` — a thin SwiftUI layer over that. `MenuBarExtra(.window)`.
+- `Sources/Blip` — the UI. A hand-built `NSStatusItem` for the menu bar item,
+  which is measurably cheaper than `MenuBarExtra`, and SwiftUI for the panel.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the parts that are easy to get wrong:
 why the build needs `DEVELOPER_DIR`, why the release is zipped with `ditto`

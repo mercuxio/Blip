@@ -204,12 +204,12 @@ final class NetworkMonitor {
         if changed {
             publicAddressCheckedAt = nil
             if publicAddressRequested {
-                // Re-ask rather than blanking. `PanelView`'s `onAppear` fires
-                // once for the life of the MenuBarExtra content view, not on
-                // every open, so a `.unknown` parked here is never resolved by
-                // anything: the panel sits on "Looking up…" until the refresh
-                // button is pressed. Waking is exactly this case, because the
-                // interface goes away and comes back.
+                // Re-ask rather than blanking. The panel's hosting controller
+                // outlives any one open, so `PanelView`'s `onAppear` cannot be
+                // relied on to fire again: a `.unknown` parked here risks never
+                // being resolved by anything, leaving the panel on "Looking up…"
+                // until the refresh button is pressed. Waking is exactly this
+                // case, because the interface goes away and comes back.
                 refreshPublicAddress(force: true)
             } else {
                 publicAddress = .unknown
