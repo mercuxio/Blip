@@ -1,5 +1,11 @@
-// Renders the app icon into a .iconset directory. Run via `make icon`, which
-// then hands the directory to `iconutil` to produce Resources/AppIcon.icns.
+// Writes the app icon as an Icon Composer bundle (Resources/AppIcon.icon). Run
+// via `make icon`, which compiles it with `actool` into Resources/Assets.car
+// and the fallback Resources/AppIcon.icns.
+//
+// An Icon Composer icon, not a flat .icns with its own rounded tile: macOS 26
+// and later treat a flat icon as legacy and shrink it onto a grey tile. From
+// the bundle the system draws the shape, the glass lighting, and the dark and
+// tinted variants itself.
 //
 // The glyph is Lucide's "network" icon, whose geometry is transcribed verbatim
 // below from lucide/icons/network.svg — a 24x24 viewBox stroked at 2 units with
@@ -48,26 +54,25 @@ private func networkGlyph() -> NSBezierPath {
 
 // MARK: - Rendering
 
-private enum Tile {
-    /// Proportions of the macOS icon grid: the rounded square occupies the
-    /// middle ~80% of the canvas, leaving the margin the system expects for
-    /// shadows and optical alignment against other icons.
-    static let inset: CGFloat = 100.0 / 1024.0
-    static let cornerRadius: CGFloat = 185.0 / 1024.0
-    /// Glyph size as a fraction of the tile.
+private enum Icon {
+    /// Icon Composer's canvas. The fill covers all of it; the system applies
+    /// the rounded mask, so nothing here draws a tile or corners.
+    static let canvas = 1024
+    /// Glyph size as a fraction of the canvas.
     static let glyphFraction: CGFloat = 0.60
 
-    static let top = NSColor(srgbRed: 0.243, green: 0.271, blue: 0.325, alpha: 1)
-    static let bottom = NSColor(srgbRed: 0.086, green: 0.102, blue: 0.129, alpha: 1)
+    static let fillTop = "srgb:0.24300,0.27100,0.32500,1.00000"
+    static let fillBottom = "srgb:0.08600,0.10200,0.12900,1.00000"
     static let stroke = NSColor(srgbRed: 0.965, green: 0.973, blue: 0.984, alpha: 1)
 }
 
-private func render(pixels: Int) -> NSBitmapImageRep {
-    let side = CGFloat(pixels)
+/// The glyph alone, on a transparent canvas, as the bundle's one layer.
+private func renderGlyph() -> NSBitmapImageRep {
+    let side = CGFloat(Icon.canvas)
     let rep = NSBitmapImageRep(
         bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
+        pixelsWide: Icon.canvas,
+        pixelsHigh: Icon.canvas,
         bitsPerSample: 8,
         samplesPerPixel: 4,
         hasAlpha: true,
@@ -80,32 +85,23 @@ private func render(pixels: Int) -> NSBitmapImageRep {
     NSGraphicsContext.saveGraphicsState()
     let context = NSGraphicsContext(bitmapImageRep: rep)!
     NSGraphicsContext.current = context
-    context.imageInterpolation = .high
     context.shouldAntialias = true
 
-    let inset = side * Tile.inset
-    let tile = NSRect(x: inset, y: inset, width: side - inset * 2, height: side - inset * 2)
-    let radius = side * Tile.cornerRadius
-
-    let tilePath = NSBezierPath(roundedRect: tile, xRadius: radius, yRadius: radius)
-    NSGradient(starting: Tile.bottom, ending: Tile.top)?.draw(in: tilePath, angle: 90)
-
-    // Map the 24-unit glyph space onto the tile, flipping y so the SVG's
+    // Map the 24-unit glyph space onto the canvas, flipping y so the SVG's
     // downward axis lands the right way up in AppKit's upward one.
-    let box = tile.width * Tile.glyphFraction
+    let box = side * Icon.glyphFraction
     let scale = box / 24
     var transform = AffineTransform()
-    transform.translate(x: tile.midX - box / 2, y: tile.midY + box / 2)
+    transform.translate(x: side / 2 - box / 2, y: side / 2 + box / 2)
     transform.scale(x: scale, y: -scale)
 
     let glyph = networkGlyph()
     glyph.transform(using: transform)
     glyph.lineCapStyle = .round
     glyph.lineJoinStyle = .round
-    // Clamped so the stroke never falls below roughly a pixel: at 16pt the
-    // honest 2-unit width works out under 0.7px and antialiases into grey mush.
-    glyph.lineWidth = max(2 * scale, 1.2)
-    Tile.stroke.setStroke()
+    // The system scales this one 1024 px layer down for small sizes itself.
+    glyph.lineWidth = 2 * scale
+    Icon.stroke.setStroke()
     glyph.stroke()
 
     NSGraphicsContext.restoreGraphicsState()
@@ -114,38 +110,42 @@ private func render(pixels: Int) -> NSBitmapImageRep {
 
 // MARK: - Output
 
-/// The exact set `iconutil` expects; anything missing makes it refuse the
-/// directory outright.
-private let variants: [(name: String, pixels: Int)] = [
-    ("icon_16x16.png", 16),
-    ("icon_16x16@2x.png", 32),
-    ("icon_32x32.png", 32),
-    ("icon_32x32@2x.png", 64),
-    ("icon_128x128.png", 128),
-    ("icon_128x128@2x.png", 256),
-    ("icon_256x256.png", 256),
-    ("icon_256x256@2x.png", 512),
-    ("icon_512x512.png", 512),
-    ("icon_512x512@2x.png", 1024),
-]
+private let manifest = """
+{
+  "fill" : {
+    "linear-gradient" : [
+      "\(Icon.fillTop)",
+      "\(Icon.fillBottom)"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [ { "image-name" : "glyph.png", "name" : "glyph" } ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    }
+  ],
+  "supported-platforms" : { "squares" : [ "macOS" ] }
+}
+
+"""
 
 let arguments = CommandLine.arguments
 guard arguments.count == 2 else {
-    FileHandle.standardError.write(Data("usage: GenerateIcon <output.iconset>\n".utf8))
+    FileHandle.standardError.write(Data("usage: GenerateIcon <AppIcon.icon>\n".utf8))
     exit(2)
 }
 
-let directory = URL(fileURLWithPath: arguments[1])
-try? FileManager.default.removeItem(at: directory)
-try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+let bundle = URL(fileURLWithPath: arguments[1])
+let assets = bundle.appendingPathComponent("Assets")
+try? FileManager.default.removeItem(at: bundle)
+try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
 
-for variant in variants {
-    guard let data = render(pixels: variant.pixels).representation(using: .png, properties: [:])
-    else {
-        FileHandle.standardError.write(Data("failed to encode \(variant.name)\n".utf8))
-        exit(1)
-    }
-    try data.write(to: directory.appendingPathComponent(variant.name))
+guard let png = renderGlyph().representation(using: .png, properties: [:]) else {
+    FileHandle.standardError.write(Data("failed to encode the glyph\n".utf8))
+    exit(1)
 }
+try png.write(to: assets.appendingPathComponent("glyph.png"))
+try Data(manifest.utf8).write(to: bundle.appendingPathComponent("icon.json"))
 
-print("Wrote \(variants.count) images to \(directory.path)")
+print("Wrote \(bundle.path)")

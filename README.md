@@ -111,7 +111,7 @@ no update check.
 make build   # swift build -c release
 make test    # 28 tests, 6 suites
 make app     # assemble .build/Blip.app
-make icon    # regenerate Resources/AppIcon.icns from Tools/GenerateIcon.swift
+make icon    # regenerate Resources/AppIcon.icon, Assets.car and AppIcon.icns (needs Xcode's actool)
 ```
 
 The layout is deliberate:

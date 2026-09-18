@@ -8,6 +8,9 @@ All notable changes to Blip are recorded here. The format follows
 
 ### Fixed
 
+- The app icon no longer sits inside a grey frame on macOS 26 and later. It is
+  now an Icon Composer icon, so the system draws the shape and the glass
+  lighting itself, with a generated fallback for older systems.
 - The public IP no longer stalls on "Looking up…" after the machine wakes.
   Waking makes the primary interface go away and come back, which cleared the
   address on the assumption that the next panel open would fetch it again — but

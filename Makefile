@@ -16,7 +16,8 @@ ZIP      := .build/Blip.app.zip
 INSTALL  := /Applications/Blip.app
 
 ICON     := Resources/AppIcon.icns
-ICONSET  := .build/AppIcon.iconset
+ICONCAR  := Resources/Assets.car
+ICONSRC  := Resources/AppIcon.icon
 
 .PHONY: all build test app zip run install uninstall icon clean
 
@@ -28,23 +29,31 @@ build:
 test:
 	swift test
 
-# Regenerating the icon is deliberately not a dependency of `app`: the .icns is
-# a checked-in artifact, and rebuilding it on every build would churn a binary
-# file for no reason. Run `make icon` when the artwork actually changes.
+# Regenerating the icon is deliberately not a dependency of `app`: the compiled
+# icon is a checked-in artifact, and rebuilding it on every build would churn a
+# binary file for no reason. Run `make icon` when the artwork actually changes.
+#
+# GenerateIcon writes an Icon Composer bundle; actool compiles it into
+# Assets.car, which macOS 26 and later draw, plus the .icns fallback.
 icon:
-	swift Tools/GenerateIcon.swift "$(ICONSET)"
-	iconutil -c icns "$(ICONSET)" -o "$(ICON)"
-	@echo "Built $(ICON)"
+	swift Tools/GenerateIcon.swift "$(ICONSRC)"
+	rm -rf .build/icon && mkdir -p .build/icon
+	xcrun actool "$(CURDIR)/$(ICONSRC)" --compile "$(CURDIR)/.build/icon" --platform macosx \
+		--minimum-deployment-target 14.0 --app-icon AppIcon \
+		--output-partial-info-plist "$(CURDIR)/.build/icon/partial.plist" > /dev/null
+	cp .build/icon/Assets.car "$(ICONCAR)"
+	cp .build/icon/AppIcon.icns "$(ICON)"
+	@echo "Built $(ICONCAR) and $(ICON)"
 
-$(ICON):
+$(ICON) $(ICONCAR):
 	$(MAKE) icon
 
-app: build $(ICON)
+app: build $(ICON) $(ICONCAR)
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp "$(BUILD)/Blip" "$(APP)/Contents/MacOS/Blip"
 	cp Resources/Info.plist "$(APP)/Contents/Info.plist"
-	cp "$(ICON)" "$(APP)/Contents/Resources/AppIcon.icns"
+	cp "$(ICON)" "$(ICONCAR)" "$(APP)/Contents/Resources/"
 	# Ad-hoc signature. Unsigned SwiftUI apps are killed on launch by the
 	# hardened runtime on Apple silicon; `-s -` satisfies it without a
 	# developer identity, at the cost of not being distributable.
