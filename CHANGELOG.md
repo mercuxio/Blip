@@ -6,6 +6,8 @@ All notable changes to Blip are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-09-18
+
 ### Fixed
 
 - The app icon no longer sits inside a grey frame on macOS 26 and later. It is
@@ -29,6 +31,10 @@ All notable changes to Blip are recorded here. The format follows
 
 ### Changed
 
+- The menu bar item uses about half the CPU, roughly 0.9% where it was 2%.
+  It is now a plain `NSStatusItem` rather than SwiftUI's `MenuBarExtra`, and
+  it repaints every 2 seconds while the rates are still polled every second,
+  so session totals stay exact.
 - The public IP lookup may now run with the panel closed: on a change of primary
   interface, and on the retry backoff above. It still never runs before the
   panel has been opened at least once, so a Blip that is never opened contacts
