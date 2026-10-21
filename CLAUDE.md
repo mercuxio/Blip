@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Blip is a macOS menu bar app showing total network ingress/egress for the
 active interface, with a click-through panel for local and public IPs. No Dock
-icon, no window, no telemetry.
+icon, no window, no telemetry. Self-update (Sparkle) exists but is opt-in and
+off by default.
 
 ## Commands
 
@@ -117,12 +118,21 @@ quiet one.
 
 ### The network boundary
 
-`api.ipify.org` / `api6.ipify.org` is the only thing this app ever contacts.
-The gate is that the panel must have been opened at least once; before that
+`api.ipify.org` / `api6.ipify.org` is the only thing this app contacts unless
+the user opts into updates (below). The gate is that the panel must have been opened at least once; before that
 Blip issues no request at all. After it, the lookup may run unattended — on a
 change of primary interface, and on a failure backoff. Adding an endpoint,
 fetching before the first panel open, or tightening the backoff needs to be
 argued for in the PR rather than slipped in. See CONTRIBUTING.
+
+**Updates are the one opt-in exception.** `Updater` wraps Sparkle's
+`SPUStandardUpdaterController` and exposes only `automaticallyChecks`, which
+reads and writes Sparkle's own value (Sparkle persists it in user defaults, so
+there is no second copy of the state to drift). `SUEnableAutomaticChecks` is
+`false` in `Info.plist`, so Blip contacts nothing for updates until the user
+ticks the box in the gear menu; it also stops Sparkle showing its own
+permission prompt on the second launch. Do not flip that default. Sparkle is
+imported by the `Blip` target only, never `BlipCore`.
 
 ## Packaging
 
@@ -132,6 +142,17 @@ not notarization — there are no entitlements and no sandbox. `make zip` uses
 `ditto`, never `zip`: part of a bundle's signature lives in extended attributes
 that `zip` drops, and the resulting failure reproduces only on the downloader's
 machine.
+
+Sparkle is embedded by hand too: `make app` `ditto`s the framework into
+`Contents/Frameworks` (it is a tree of symlinks, so not `cp -R`), adds the
+`@executable_path/../Frameworks` rpath with `install_name_tool`, and signs
+**inside-out** (XPC services, `Autoupdate`, `Updater.app`, framework, app).
+Never `--deep`: a parent's signature seals its children. Blip is unsandboxed
+and does not use `--options runtime`, so none of Sniffcast's sandbox pieces
+(installer launcher service, mach-lookup exceptions, library-validation
+entitlement) are needed here. The release artifact is `.build/Blip-<version>.zip`;
+`scripts/appcast.sh` signs it and writes `appcast.xml`. `SUPublicEDKey` is
+shared with Sniffcast. See CONTRIBUTING for the release steps.
 
 SwiftPM builds for the host architecture only. A release built on Apple silicon
 is arm64-only — check with `lipo -archs` before claiming otherwise.

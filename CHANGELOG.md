@@ -6,6 +6,25 @@ All notable changes to Blip are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-10-21
+
+### Added
+
+- **Check for updates automatically**, a tick in the gear menu directly below
+  Start at login. It is off by default, and while it is off Blip contacts
+  nothing for updates. Turned on, Blip reads a signed feed (`appcast.xml` in
+  this repository) and installs new releases through Sparkle, with each
+  download verified against an EdDSA signature.
+
+### Changed
+
+- Blip now depends on [Sparkle](https://sparkle-project.org) for this, and the
+  app bundle embeds `Sparkle.framework`. Only the menu bar target links it;
+  `BlipCore` is unchanged.
+- The release asset is now `Blip-<version>.zip` rather than `Blip.app.zip`.
+- Installs of 1.0.1 and earlier have no updater, so this release has to be
+  installed by hand once.
+
 ## [1.0.1] — 2026-09-18
 
 ### Fixed

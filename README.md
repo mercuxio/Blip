@@ -12,7 +12,7 @@ machine you build on.
 
 ## Install
 
-**Download the release.** Grab `Blip.app.zip` from
+**Download the release.** Grab `Blip-<version>.zip` from
 [Releases](https://github.com/mercuxio/Blip/releases), unzip it, and drag
 `Blip.app` to `/Applications`.
 
@@ -102,8 +102,14 @@ a backoff that starts at 15 seconds, doubles, and settles at one attempt every
 15 minutes until it succeeds. Some of that happens with the panel closed. The
 refresh button forces a fresh request at any time.
 
-Nothing else leaves the machine. There is no analytics, no crash reporting, and
-no update check.
+Updates are the one other thing that can reach the network, and only if you ask
+for it. **Check for updates automatically** in the gear menu is off by default,
+and while it is off Blip contacts nothing for updates. Turn it on and Blip reads
+a small signed feed from `raw.githubusercontent.com` (the `appcast.xml` in this
+repository) and downloads a new release from GitHub when there is one. The
+download is verified against an EdDSA signature before it is installed.
+
+Nothing else leaves the machine. There is no analytics and no crash reporting.
 
 ## Development
 

@@ -56,7 +56,7 @@ final class StatusItemController {
     private var lastRender: TimeInterval = -.greatestFiniteMagnitude
     private var pendingRender: Task<Void, Never>?
 
-    init(monitor: NetworkMonitor, settings: AppSettings) {
+    init(monitor: NetworkMonitor, settings: AppSettings, updater: Updater) {
         self.monitor = monitor
         self.settings = settings
         // A concrete length, not `.variableLength` — this is the whole point of
@@ -70,7 +70,7 @@ final class StatusItemController {
         popover.behavior = .transient
         popover.animates = false
         popover.contentViewController = NSHostingController(
-            rootView: PanelView(monitor: monitor, style: settings.styleBinding)
+            rootView: PanelView(monitor: monitor, updater: updater, style: settings.styleBinding)
         )
 
         item.button?.target = self

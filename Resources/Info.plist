@@ -18,9 +18,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.1</string>
+	<string>1.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>3</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>LSMinimumSystemVersion</key>
@@ -28,5 +28,16 @@
 	<!-- Agent app: menu bar only. No Dock tile, no main menu, no window on launch. -->
 	<key>LSUIElement</key>
 	<true/>
+	<!-- Self-update (Sparkle). The feed is read from the main branch on GitHub, and every
+	     download is checked against the public key before anything is installed. -->
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/mercuxio/Blip/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>10VIpTMQm9DmV5p6kNgsHBI3Fwd06CSUKhUM8HMhbis=</string>
+	<!-- Off until the user ticks it in the settings menu. Sparkle never contacts the network
+	     while this is false, which is what keeps Blip silent by default. Naming it also stops
+	     Sparkle asking its own permission question on the second launch. -->
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
 </dict>
 </plist>

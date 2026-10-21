@@ -12,12 +12,17 @@ export DEVELOPER_DIR
 CONFIG   ?= release
 BUILD    := .build/$(CONFIG)
 APP      := .build/Blip.app
-ZIP      := .build/Blip.app.zip
+VERSION  := $(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)
+ZIP      := .build/Blip-$(VERSION).zip
 INSTALL  := /Applications/Blip.app
 
 ICON     := Resources/AppIcon.icns
 ICONCAR  := Resources/Assets.car
 ICONSRC  := Resources/AppIcon.icon
+
+# Sparkle ships as a binary xcframework that SwiftPM fetches but does not embed,
+# and SwiftPM cannot emit a bundle, so it is copied in by hand like everything else.
+SPARKLE  := $(firstword $(wildcard .build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-*/Sparkle.framework))
 
 .PHONY: all build test app zip run install uninstall icon clean
 
@@ -54,10 +59,27 @@ app: build $(ICON) $(ICONCAR)
 	cp "$(BUILD)/Blip" "$(APP)/Contents/MacOS/Blip"
 	cp Resources/Info.plist "$(APP)/Contents/Info.plist"
 	cp "$(ICON)" "$(ICONCAR)" "$(APP)/Contents/Resources/"
+	# `ditto`, not `cp -R`: the framework is a tree of symlinks (Versions/Current)
+	# and its signature depends on them surviving the copy.
+	mkdir -p "$(APP)/Contents/Frameworks"
+	ditto "$(SPARKLE)" "$(APP)/Contents/Frameworks/Sparkle.framework"
+	# SwiftPM links Sparkle by @rpath but only knows where it built it, not where
+	# the bundle will keep it.
+	install_name_tool -add_rpath @executable_path/../Frameworks "$(APP)/Contents/MacOS/Blip"
 	# Ad-hoc signature. Unsigned SwiftUI apps are killed on launch by the
 	# hardened runtime on Apple silicon; `-s -` satisfies it without a
 	# developer identity, at the cost of not being distributable.
+	#
+	# Inside-out, and not `--deep`: a container's signature seals the signatures
+	# of what it contains, so anything signed after its parent invalidates it.
+	# Sparkle's helpers go first, then the framework, then the app.
+	codesign --force --sign - --timestamp=none "$(APP)/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+	codesign --force --sign - --timestamp=none "$(APP)/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+	codesign --force --sign - --timestamp=none "$(APP)/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+	codesign --force --sign - --timestamp=none "$(APP)/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+	codesign --force --sign - --timestamp=none "$(APP)/Contents/Frameworks/Sparkle.framework"
 	codesign --force --sign - --timestamp=none "$(APP)"
+	codesign --verify --strict --deep "$(APP)"
 	@echo "Built $(APP)"
 
 # The release artifact.

@@ -28,8 +28,9 @@ Calling `swift test` directly works only if you export it yourself first.
 properties cannot be referenced from a nonisolated context — an error that names
 the properties and never mentions your Swift version.
 
-There are no package dependencies, and there should not be any. `swift-testing`
-comes from the toolchain, not from SPM.
+There is one package dependency, [Sparkle](https://sparkle-project.org), used for
+self-update by the `Blip` target only. `BlipCore` has none and should keep it
+that way. `swift-testing` comes from the toolchain, not from SPM.
 
 ## Where the logic goes
 
@@ -70,6 +71,14 @@ runtime, which would otherwise kill an unsigned SwiftUI app on Apple silicon,
 but it is not notarization: downloads are quarantined until the user clears the
 flag. See the README.
 
+Sparkle is a framework, and SwiftPM cannot embed one in a hand-assembled `.app`,
+so `make app` copies it into `Contents/Frameworks` with `ditto` (it is a tree of
+symlinks), adds the `@executable_path/../Frameworks` rpath, and signs inside-out:
+the XPC services, `Autoupdate` and `Updater.app`, then the framework, then the
+app. Never `codesign --deep`; a parent's signature seals its children, so
+anything signed after its parent invalidates it. `make app` ends with
+`codesign --verify --strict --deep`, which is the check that matters.
+
 SwiftPM builds for the host architecture only. A release built on Apple silicon
 is arm64-only — check with `lipo -archs` before claiming otherwise.
 
@@ -91,3 +100,23 @@ there is no reliable "next open" to defer the re-ask to.
 Any change that adds an endpoint, that fetches before the first panel open, or
 that tightens the backoff, needs to be argued for in the pull request rather
 than slipped in.
+
+The one exception to "only ipify" is the update check, and it is opt-in:
+`SUEnableAutomaticChecks` is `false` in `Info.plist`, so Sparkle contacts nothing
+until the user ticks **Check for updates automatically**. Do not flip that
+default, and do not add a manual or launch-time check that bypasses it.
+
+### Releasing an update
+
+1. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist`.
+2. `make zip` builds `.build/Blip-<version>.zip`.
+3. Upload it to the `v<version>` GitHub release.
+4. `scripts/appcast.sh` signs it with the EdDSA key in the login Keychain and
+   prepends an item to `appcast.xml`.
+5. Commit and push `appcast.xml`. Installed copies read it from `main`, so an
+   update goes live the moment that push lands. Upload the zip first.
+
+The signing key is shared with Sniffcast: `SUPublicEDKey` is the same, and the
+private half is in the login Keychain (`generate_keys -p` prints the public key).
+Losing it means shipping a build with a new public key that users must install by
+hand.

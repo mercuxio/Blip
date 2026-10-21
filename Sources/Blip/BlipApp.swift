@@ -27,6 +27,7 @@ enum Blip {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: NetworkMonitor?
     private var controller: StatusItemController?
+    private var updater: Updater?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // No Dock icon and no menu bar menu. `LSUIElement` in Info.plist covers
@@ -36,7 +37,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let monitor = NetworkMonitor()
         let settings = AppSettings()
+        let updater = Updater()
         self.monitor = monitor
-        controller = StatusItemController(monitor: monitor, settings: settings)
+        self.updater = updater
+        controller = StatusItemController(monitor: monitor, settings: settings, updater: updater)
     }
 }

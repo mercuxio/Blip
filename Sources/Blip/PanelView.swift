@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PanelView: View {
     let monitor: NetworkMonitor
+    let updater: Updater
     @Binding var style: DisplayStyle
 
     var body: some View {
@@ -20,7 +21,7 @@ struct PanelView: View {
                 refresh: { monitor.refreshPublicAddress(force: true) }
             )
             Divider()
-            FooterBar(monitor: monitor, style: $style)
+            FooterBar(monitor: monitor, updater: updater, style: $style)
         }
         .frame(width: 340)
         // Ideal height rather than whatever the host proposes. `NSPopover`
@@ -177,6 +178,7 @@ private struct FooterBar: View {
     static let supportURL = URL(string: "https://buymeacoffee.com/benjamintan")!
 
     let monitor: NetworkMonitor
+    let updater: Updater
     @Binding var style: DisplayStyle
 
     /// Mirrors the system's login-item registration for the duration of the
@@ -211,6 +213,12 @@ private struct FooterBar: View {
                         LaunchAtLogin.set(wanted)
                         launchAtLogin = LaunchAtLogin.isEnabled
                     }
+                ))
+                // Sparkle owns this value and persists it itself, so the
+                // binding reads and writes straight through rather than caching.
+                Toggle("Check for updates automatically", isOn: Binding(
+                    get: { updater.automaticallyChecks },
+                    set: { updater.automaticallyChecks = $0 }
                 ))
 
                 Divider()
