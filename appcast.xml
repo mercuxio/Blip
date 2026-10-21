@@ -2,5 +2,14 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Blip</title>
+    <item>
+      <title>Blip 1.1.0</title>
+      <pubDate>Wed, 21 Oct 2026 13:11:07 +0000</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/mercuxio/Blip/releases/tag/v1.1.0</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/mercuxio/Blip/releases/download/v1.1.0/Blip-1.1.0.zip" type="application/octet-stream" sparkle:edSignature="3eT8PXHDTZ3RKuU6OW50bjOwmSLE7aTzdr7ltFLdb9TEGrFr6hk67rylSIPy9UZt8urAwXDJ5vUEWKhkO75ODg==" length="2956208"/>
+    </item>
   </channel>
 </rss>
